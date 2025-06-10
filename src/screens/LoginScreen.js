@@ -4,8 +4,11 @@ import {
   View, Text, TextInput, Button, StyleSheet, Image, TouchableOpacity
 } from 'react-native';
 import { colors } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function LoginScreen({ navigation }) {
+  const { theme } = useTheme();
+
   return (
     <View style={styles.container}>
       <Image source={require('../../assets/slack-logo.png')} style={styles.logo} />

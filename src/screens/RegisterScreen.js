@@ -4,8 +4,11 @@ import {
   View, Text, TextInput, Button, StyleSheet
 } from 'react-native';
 import { colors } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function RegisterScreen({ navigation }) {
+  const { theme } = useTheme();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>

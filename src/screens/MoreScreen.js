@@ -1,7 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export default function MoreScreen({ navigation }) {
+  const { theme } = useTheme();
+
   const handleLogout = () => {
     Alert.alert(
       'Confirm Logout',
@@ -21,12 +24,20 @@ export default function MoreScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.option}>
-        <Text style={styles.optionText}>Profile</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <TouchableOpacity
+        style={styles.option}
+        onPress={() => navigation.navigate('ProfileScreen')}>
+        <Text style={[styles.optionText, { color: theme.text }]} className="text-white text-lg p-4">
+          Profile
+        </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.option}>
-        <Text style={styles.optionText}>Settings</Text>
+      <TouchableOpacity
+        style={styles.option}
+        onPress={() => navigation.navigate('SettingScreen')}>
+        <Text style={[styles.optionText, { color: theme.text }]}>
+          Settings
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.option, { backgroundColor: '#E53935' }]}
@@ -40,17 +51,14 @@ export default function MoreScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     padding: 20,
   },
   option: {
-    backgroundColor: '#2A2A2A',
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
   },
   optionText: {
-    color: '#fff',
     fontSize: 16,
   },
 });

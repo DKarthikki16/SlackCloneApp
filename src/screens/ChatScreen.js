@@ -11,7 +11,8 @@ import {
   Platform,
   SafeAreaView,
   Modal,
-  Pressable
+  Pressable,
+  ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
@@ -43,7 +44,7 @@ const initialMessages = {
     },
     {
       id: '3',
-      text: `Welcome to #general channel!`,
+      text: 'Welcome to #general channel!',
       createdAt: new Date(),
       user: {
         _id: 'system',
@@ -72,11 +73,12 @@ const initialMessages = {
   ],
 };
 
-const defaultDMUser = {
-  id: 'u1',
-  name: 'Gokul',
-  avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-};
+// Dummy DM user list – customize as needed
+const dmUserList = [
+  { id: 'u1', name: 'Gokul', avatar: 'https://randomuser.me/api/portraits/men/2.jpg' },
+  { id: 'u2', name: 'Priya', avatar: 'https://randomuser.me/api/portraits/women/1.jpg' },
+  { id: 'u3', name: 'Alex', avatar: 'https://randomuser.me/api/portraits/men/3.jpg' },
+];
 
 export default function ChatScreen({ route, navigation }) {
   const { underlineLinks, showTypingIndicators, raiseHand, compactMode } = usePreferences();
@@ -85,19 +87,32 @@ export default function ChatScreen({ route, navigation }) {
   const isDM = !!dmUser;
   const { theme } = useTheme();
 
-  // If no channel or DM is selected, redirect to default DM
-  React.useEffect(() => {
-    if (!channel && !dmUser) {
-      navigation.setParams({ dmUser: defaultDMUser });
-    }
-  }, [channel, dmUser, navigation]);
+  // State for Huddle modal
+  const [huddleModalVisible, setHuddleModalVisible] = useState(false);
 
-  // Use defaultDMUser if dmUser is still undefined
+  // When no channel or DM is provided, show DM list first
   if (!channel && !dmUser) {
-    dmUser = defaultDMUser;
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={[styles.headerText, { color: theme.text, textAlign: 'center', marginVertical: 16 }]}>
+          Direct Messages
+        </Text>
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          {dmUserList.map(item => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.dmListItem}
+              onPress={() => navigation.navigate('Chat', { dmUser: item })}
+            >
+              <Image source={{ uri: item.avatar }} style={styles.dmListAvatar} />
+              <Text style={[styles.dmListName, { color: theme.text }]}>{item.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    );
   }
 
-  // Now safely use dmUser or channel
   const chatKey = isDM ? `dm:${dmUser.id}` : `channel:${channel?.id}`;
   const [allMessages, setAllMessages] = useState(initialMessages);
   const messages = allMessages[chatKey] || [];
@@ -107,14 +122,12 @@ export default function ChatScreen({ route, navigation }) {
 
   const sendMessage = () => {
     if (!newMessage.trim()) return;
-
     const messageData = {
       id: Date.now().toString(),
       text: newMessage,
       createdAt: new Date(),
       user: currentUser,
     };
-
     setAllMessages(prev => ({
       ...prev,
       [chatKey]: [messageData, ...(prev[chatKey] || [])],
@@ -174,52 +187,19 @@ export default function ChatScreen({ route, navigation }) {
     );
   };
 
-  const handleAttachPhotoVideo = () => {
-    setActionModalVisible(false);
-    // TODO: Implement photo/video picker logic
-    alert('Attach photos and videos clicked!');
+  // Huddle modal handlers
+  const handleShareVideos = () => {
+    setHuddleModalVisible(false);
+    alert('Share your videos clicked!');
   };
-
-  const handleRecordAudio = () => {
-    setActionModalVisible(false);
-    // TODO: Implement audio recording logic
-    alert('Record an audio clicked!');
+  const handleAddReactions = () => {
+    setHuddleModalVisible(false);
+    alert('Add reactions & stickers clicked!');
   };
-
-  const handleRecordVideo = () => {
-    setActionModalVisible(false);
-    // TODO: Implement video recording logic
-    alert('Record a video clicked!');
+  const handleKeepTrackNotes = () => {
+    setHuddleModalVisible(false);
+    alert('Keep track of notes in threads clicked!');
   };
-
-  const handleUploadFile = () => {
-    setActionModalVisible(false);
-    // TODO: Implement file upload logic
-    alert('Upload a file clicked!');
-  };
-
-  if (!channel && !dmUser) {
-    return (
-      <View style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: theme.text, fontSize: 18, marginBottom: 24 }}>
-          Start a direct message!
-        </Text>
-        <TouchableOpacity
-          style={{
-            backgroundColor: theme.accent,
-            paddingVertical: 12,
-            paddingHorizontal: 28,
-            borderRadius: 24,
-          }}
-          onPress={() => navigation.navigate('Home', { openDMModal: true })}
-        >
-          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
-            Add New Teammates
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -228,22 +208,25 @@ export default function ChatScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        {isDM ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Image source={{ uri: dmUser.avatar }} style={styles.dmHeaderAvatar} />
+        {!isDM ? (
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={[styles.headerText, { color: theme.text }]}>
-              {dmUser.name}
+              #{channel?.name || 'general'}
             </Text>
+            <TouchableOpacity onPress={() => setHuddleModalVisible(true)} style={{ marginLeft: 16 }}>
+              <Text style={{ fontSize: 20 }}>🎧</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          <Text style={[styles.headerText, { color: theme.text }]}>
-            #{channel?.name || 'general'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Image source={{ uri: dmUser.avatar }} style={styles.dmHeaderAvatar} />
+            <Text style={[styles.headerText, { color: theme.text }]}>{dmUser.name}</Text>
+          </View>
         )}
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Messages */}
+      {/* Messages List */}
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -253,50 +236,31 @@ export default function ChatScreen({ route, navigation }) {
         contentContainerStyle={styles.messagesContainer}
       />
 
-      {/* Typing Indicator */}
+      {/* Typing Indicator Hook – if enabled via preferences */}
       {showTypingIndicators && (
         <Text style={{ color: 'gray', margin: 8 }}>Someone is typing...</Text>
       )}
 
-      {/* Input */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
-      >
-        <View style={[
-          styles.inputContainer,
-          { backgroundColor: theme.card, borderTopColor: theme.border }
-        ]}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => setActionModalVisible(true)}
-          >
+      {/* Input and Action Modal */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={[styles.inputContainer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => setActionModalVisible(true)}>
             <Ionicons name="add" size={24} color={theme.accent} />
           </TouchableOpacity>
-
           <TextInput
             style={[styles.textInput, { backgroundColor: theme.input, color: theme.text }]}
             value={newMessage}
             onChangeText={setNewMessage}
-            placeholder={
-              isDM
-                ? `Message ${dmUser.name}`
-                : `Message #${channel?.name || 'general'}`
-            }
+            placeholder={isDM ? `Message ${dmUser.name}` : `Message #${channel?.name || 'general'}`}
             placeholderTextColor={theme.placeholder}
             multiline
           />
-
           <TouchableOpacity
             style={styles.iconButton}
             onPress={sendMessage}
             disabled={!newMessage.trim()}
           >
-            <Ionicons
-              name="send"
-              size={22}
-              color={newMessage.trim() ? theme.accent : theme.secondaryText}
-            />
+            <Ionicons name="send" size={22} color={newMessage.trim() ? theme.accent : theme.secondaryText} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -308,14 +272,8 @@ export default function ChatScreen({ route, navigation }) {
         animationType="slide"
         onRequestClose={() => setActionModalVisible(false)}
       >
-        <Pressable
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.3)',
-            justifyContent: 'flex-end',
-          }}
-          onPress={() => setActionModalVisible(false)}
-        >
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end' }}
+          onPress={() => setActionModalVisible(false)}>
           <View style={{
             backgroundColor: theme.card,
             borderTopLeftRadius: 18,
@@ -323,38 +281,65 @@ export default function ChatScreen({ route, navigation }) {
             padding: 24,
             alignItems: 'center',
           }}>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}
-              onPress={handleAttachPhotoVideo}
-            >
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}
+              onPress={() => {
+                setActionModalVisible(false);
+                alert('Attach photos and videos clicked!');
+              }}>
               <Ionicons name="images-outline" size={24} color={theme.accent} style={{ marginRight: 12 }} />
               <Text style={{ color: theme.text, fontSize: 16 }}>Attach photos and videos</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}
-              onPress={handleRecordAudio}
-            >
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}
+              onPress={() => {
+                setActionModalVisible(false);
+                alert('Record an audio clicked!');
+              }}>
               <Ionicons name="mic-outline" size={24} color={theme.accent} style={{ marginRight: 12 }} />
               <Text style={{ color: theme.text, fontSize: 16 }}>Record an audio</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}
-              onPress={handleRecordVideo}
-            >
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}
+              onPress={() => {
+                setActionModalVisible(false);
+                alert('Record a video clicked!');
+              }}>
               <Ionicons name="videocam-outline" size={24} color={theme.accent} style={{ marginRight: 12 }} />
               <Text style={{ color: theme.text, fontSize: 16 }}>Record a video</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
-              onPress={handleUploadFile}
-            >
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
+              onPress={() => {
+                setActionModalVisible(false);
+                alert('Upload a file clicked!');
+              }}>
               <Ionicons name="document-outline" size={24} color={theme.accent} style={{ marginRight: 12 }} />
               <Text style={{ color: theme.text, fontSize: 16 }}>Upload a file</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={{ marginTop: 16 }}
-              onPress={() => setActionModalVisible(false)}
-            >
+            <TouchableOpacity style={{ marginTop: 16 }} onPress={() => setActionModalVisible(false)}>
+              <Text style={{ color: theme.secondaryText, fontSize: 16 }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Huddle Modal */}
+      <Modal
+        visible={huddleModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setHuddleModalVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setHuddleModalVisible(false)}>
+          <View style={[styles.huddleModalContent, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Huddle Options</Text>
+            <TouchableOpacity style={styles.huddleOption} onPress={handleShareVideos}>
+              <Text style={[styles.huddleOptionText, { color: theme.text }]}>Share your videos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.huddleOption} onPress={handleAddReactions}>
+              <Text style={[styles.huddleOptionText, { color: theme.text }]}>Add reactions & stickers</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.huddleOption} onPress={handleKeepTrackNotes}>
+              <Text style={[styles.huddleOptionText, { color: theme.text }]}>Keep track of notes in threads</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginTop: 16 }} onPress={() => setHuddleModalVisible(false)}>
               <Text style={{ color: theme.secondaryText, fontSize: 16 }}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -368,8 +353,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 15,
     borderBottomWidth: 1,
   },
@@ -426,7 +411,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'center', // changed from 'flex-end' to 'center'
+    alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderTopWidth: 1,
@@ -435,15 +420,59 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 20,
     paddingHorizontal: 15,
-    paddingVertical: 8, // slightly less padding for better vertical alignment
+    paddingVertical: 8,
     fontSize: 15,
     maxHeight: 120,
-    minHeight: 40, // ensures a minimum height
+    minHeight: 40,
   },
   iconButton: {
     paddingHorizontal: 8,
-    height: 40, // match minHeight of textInput for alignment
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-  }
+  },
+  dmListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 16,
+  },
+  dmListAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  dmListName: {
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  huddleModalContent: {
+    borderRadius: 12,
+    padding: 24,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  huddleOption: {
+    paddingVertical: 12,
+    width: '100%',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  huddleOptionText: {
+    fontSize: 16,
+  },
 });

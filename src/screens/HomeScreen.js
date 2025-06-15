@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
-import { useProfile } from '../context/ProfileContext'; // Make sure this path is correct
+import { useProfile } from '../context/ProfileContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -55,7 +55,7 @@ const userEmail = 'karthikd062004@gmail.com';
 
 export default function HomeScreen({ navigation }) {
   const { theme } = useTheme();
-  const { profileImage } = useProfile() || {}; // <-- fallback to avoid undefined error
+  const { profileImage } = useProfile() || {};
   const [channels, setChannels] = useState(initialChannels);
   const [dms, setDMs] = useState(initialDMs);
   const [modalVisible, setModalVisible] = useState(false);
@@ -68,10 +68,10 @@ export default function HomeScreen({ navigation }) {
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [menuModalVisible, setMenuModalVisible] = useState(false);
   const [sortModalVisible, setSortModalVisible] = useState(false);
-  const [sortType, setSortType] = useState('sections'); // or 'recent'
+  const [sortType, setSortType] = useState('sections');
   const [statusModalVisible, setStatusModalVisible] = useState(false);
-  const [userStatus, setUserStatus] = useState(''); // State for user status
-  const [isUserActive, setIsUserActive] = useState(true); // State for user active status
+  const [userStatus, setUserStatus] = useState('');
+  const [isUserActive, setIsUserActive] = useState(true);
 
   // Dropdown state
   const [channelsOpen, setChannelsOpen] = useState(true);
@@ -80,7 +80,6 @@ export default function HomeScreen({ navigation }) {
   // Sort channels and DMs based on sortType
   const sortedChannels = [...channels];
   const sortedDMs = [...dms];
-
   if (sortType === 'recent') {
     sortedChannels.sort((a, b) => Number(b.id) - Number(a.id));
     sortedDMs.sort((a, b) => Number(b.id) - Number(a.id));
@@ -120,7 +119,6 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  // For Jump To modal, combine channels and DMs
   const jumpList = [
     ...channels.map(c => ({ ...c, type: 'channel' })),
     ...dms.map(d => ({ ...d, type: 'dm' })),
@@ -128,7 +126,6 @@ export default function HomeScreen({ navigation }) {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Dropdown toggle handlers
   const toggleChannels = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setChannelsOpen(open => !open);
@@ -149,6 +146,14 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  // When toggling active status from profile modal
+  const toggleActiveStatus = () => {
+    const newStatus = !isUserActive;
+    setIsUserActive(newStatus);
+    setProfileModalVisible(false);
+    Alert.alert('Status Updated', `You are now ${newStatus ? 'active' : 'away'}.`);
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
@@ -158,7 +163,7 @@ export default function HomeScreen({ navigation }) {
             <Ionicons name="menu" size={28} color={theme.text} style={{ marginRight: 12 }} />
           </TouchableOpacity>
           <Image
-            source={require('../../assets/slack-logo.png')} 
+            source={require('../../assets/slack-logo.png')}
             style={{ width: 32, height: 32, marginRight: 10 }}
             resizeMode="contain"
           />
@@ -169,9 +174,8 @@ export default function HomeScreen({ navigation }) {
             source={profileImage || require('../../assets/profile-icon.png')}
             style={styles.avatar}
           />
-          {/* Status indicator */}
-          <View style={[styles.statusIndicatorContainer]}>
-            <View style={[styles.statusIndicator, { backgroundColor: isUserActive ? theme.online : theme.away }]} />
+          <View style={styles.statusIndicatorContainer}>
+            <View style={[styles.statusIndicator, { backgroundColor: isUserActive ? theme.online || '#4CAF50' : theme.away || '#A3A3A3' }]} />
           </View>
         </TouchableOpacity>
       </View>
@@ -189,7 +193,7 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      {/* Channels Section (Dropdown) */}
+      {/* Channels Section */}
       <TouchableOpacity style={styles.sectionHeaderRow} onPress={toggleChannels} activeOpacity={0.7}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Ionicons
@@ -226,13 +230,9 @@ export default function HomeScreen({ navigation }) {
         />
       )}
 
-      {/* DMs Section (Dropdown) */}
+      {/* DMs Section */}
       <View style={styles.sectionHeaderRow}>
-        <TouchableOpacity
-          style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
-          onPress={toggleDMs}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }} onPress={toggleDMs} activeOpacity={0.7}>
           <Ionicons
             name={dmsOpen ? 'chevron-down' : 'chevron-forward'}
             size={20}
@@ -294,7 +294,10 @@ export default function HomeScreen({ navigation }) {
               onChangeText={setNewChannel}
               autoFocus
             />
-            <TouchableOpacity style={[styles.addButton, { backgroundColor: theme.accent }]}>
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.accent }]}
+              onPress={handleAddChannel}
+            >
               <Text style={[styles.addButtonText, { color: '#fff' }]}>Add</Text>
             </TouchableOpacity>
           </View>
@@ -313,7 +316,6 @@ export default function HomeScreen({ navigation }) {
             <Text style={[styles.modalTitle, { color: theme.text }]}>
               Invite people to join your team
             </Text>
-            {/* Share a link */}
             <TouchableOpacity
               style={[styles.addButton, { marginBottom: 12, width: '100%' }]}
               onPress={handleShareLink}
@@ -321,7 +323,6 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="share-social-outline" size={20} color="#fff" style={{ marginRight: 10 }} />
               <Text style={styles.addButtonText}>Share a link</Text>
             </TouchableOpacity>
-            {/* Add from contacts */}
             <TouchableOpacity
               style={[styles.addButton, { marginBottom: 12, width: '100%' }]}
               onPress={() => {
@@ -332,7 +333,6 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="person-add-outline" size={20} color="#fff" style={{ marginRight: 10 }} />
               <Text style={styles.addButtonText}>Add from contacts</Text>
             </TouchableOpacity>
-            {/* Add by email */}
             <TouchableOpacity
               style={[styles.addButton, { width: '100%' }]}
               onPress={() => {
@@ -401,7 +401,6 @@ export default function HomeScreen({ navigation }) {
       >
         <Pressable style={styles.modalOverlay} onPress={() => setProfileModalVisible(false)}>
           <View style={[styles.profileModalContent, { backgroundColor: theme.card }]}>
-            {/* Make profile photo clickable */}
             <TouchableOpacity
               onPress={() => {
                 setProfileModalVisible(false);
@@ -418,8 +417,6 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
             <Text style={[styles.profileName, { color: theme.text }]}>{userName}</Text>
             <Text style={[styles.profileEmail, { color: theme.secondaryText }]}>{userEmail}</Text>
-
-            {/* Update your status */}
             <TouchableOpacity
               style={styles.profileAction}
               onPress={() => {
@@ -430,21 +427,13 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="chatbubble-ellipses-outline" size={20} color="#4A99E9" style={{ marginRight: 10 }} />
               <Text style={[styles.profileActionText, { color: theme.text }]}>Update your status</Text>
             </TouchableOpacity>
-
-            {/* Set yourself as active/away */}
             <TouchableOpacity
               style={styles.profileAction}
-              onPress={() => {
-                setProfileModalVisible(false);
-                setIsUserActive(prevState => !prevState);
-                Alert.alert('Status Updated', `You are now ${isUserActive ? 'away' : 'active'}.`);
-              }}
+              onPress={toggleActiveStatus}
             >
               <Ionicons name="ellipse-outline" size={20} color="#4A99E9" style={{ marginRight: 10 }} />
-              <Text style={[styles.profileActionText, {color: theme.text}]}>Set yourself as active/away</Text>
+              <Text style={[styles.profileActionText, { color: theme.text }]}>Set yourself as active/away</Text>
             </TouchableOpacity>
-
-            {/* View Profile */}
             <TouchableOpacity
               style={[styles.profileAction, { backgroundColor: theme.input }]}
               onPress={() => {
@@ -461,8 +450,6 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="person-outline" size={20} color={theme.accent} style={{ marginRight: 10 }} />
               <Text style={[styles.profileActionText, { color: theme.text }]}>View Profile</Text>
             </TouchableOpacity>
-
-            {/* Preferences */}
             <TouchableOpacity
               style={styles.profileAction}
               onPress={() => {
@@ -471,10 +458,8 @@ export default function HomeScreen({ navigation }) {
               }}
             >
               <Ionicons name="settings-outline" size={20} color="#4A99E9" style={{ marginRight: 10 }} />
-              <Text style={[styles.profileActionText,{ color: theme.text }]}>Preferences</Text>
+              <Text style={[styles.profileActionText, { color: theme.text }]}>Preferences</Text>
             </TouchableOpacity>
-
-            {/* Notifications */}
             <TouchableOpacity
               style={styles.profileAction}
               onPress={() => {
@@ -483,10 +468,8 @@ export default function HomeScreen({ navigation }) {
               }}
             >
               <Ionicons name="notifications-outline" size={20} color="#4A99E9" style={{ marginRight: 10 }} />
-              <Text style={[styles.profileActionText,{ color: theme.text }]}>Notifications</Text>
+              <Text style={[styles.profileActionText, { color: theme.text }]}>Notifications</Text>
             </TouchableOpacity>
-
-            {/* Invitations to connect */}
             <TouchableOpacity
               style={styles.profileAction}
               onPress={() => {
@@ -495,13 +478,14 @@ export default function HomeScreen({ navigation }) {
               }}
             >
               <Ionicons name="person-add-outline" size={20} color="#4A99E9" style={{ marginRight: 10 }} />
-              <Text style={[styles.profileActionText,{ color: theme.text }]}>Invitations to connect</Text>
+              <Text style={[styles.profileActionText, { color: theme.text }]}>Invitations to connect</Text>
             </TouchableOpacity>
-
-            {/* Sign Out */}
             <TouchableOpacity
               style={[styles.profileAction, { marginTop: 12 }]}
-              onPress={() => setProfileModalVisible(false)}
+              onPress={() => {
+                setProfileModalVisible(false);
+                navigation.navigate('Login');
+              }}
             >
               <Ionicons name="log-out-outline" size={20} color="#E53935" style={{ marginRight: 10 }} />
               <Text style={[styles.profileActionText, { color: '#E53935' }]}>Sign Out</Text>
@@ -529,7 +513,7 @@ export default function HomeScreen({ navigation }) {
               autoFocus
             />
             <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: theme.accent }]} 
+              style={[styles.addButton, { backgroundColor: theme.accent }]}
               onPress={() => {
                 Alert.alert('Status Saved', `Your status: ${userStatus}`);
                 setStatusModalVisible(false);
@@ -554,7 +538,6 @@ export default function HomeScreen({ navigation }) {
               style={styles.menuItem}
               onPress={() => {
                 setMenuModalVisible(false);
-                // Already on Home, so do nothing or scroll to top
               }}
             >
               <Ionicons name="home-outline" size={20} color={theme.text} style={{ marginRight: 12 }} />
@@ -574,7 +557,7 @@ export default function HomeScreen({ navigation }) {
               style={styles.menuItem}
               onPress={() => {
                 setMenuModalVisible(false);
-                setSortModalVisible(true); // Show sort modal instead of Alert
+                setSortModalVisible(true);
               }}
             >
               <Ionicons name="swap-vertical-outline" size={20} color={theme.text} style={{ marginRight: 12 }} />
@@ -591,21 +574,17 @@ export default function HomeScreen({ navigation }) {
         animationType="slide"
         onRequestClose={() => setSortModalVisible(false)}
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setSortModalVisible(false)}
-        >
+        <Pressable style={styles.modalOverlay} onPress={() => setSortModalVisible(false)}>
           <View style={styles.sortModalContent}>
             <Text style={styles.modalTitle}>Sort by</Text>
             <TouchableOpacity
               style={[
                 styles.sortOption,
-                sortType === 'sections' && { backgroundColor: '#232129' }
+                sortType === 'sections' && { backgroundColor: '#232129' },
               ]}
               onPress={() => {
                 setSortType('sections');
                 setSortModalVisible(false);
-                // Optionally, sort your lists here
               }}
             >
               <Text style={{ color: '#fff', fontSize: 16 }}>Sections</Text>
@@ -616,12 +595,11 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity
               style={[
                 styles.sortOption,
-                sortType === 'recent' && { backgroundColor: '#232129' }
+                sortType === 'recent' && { backgroundColor: '#232129' },
               ]}
               onPress={() => {
                 setSortType('recent');
                 setSortModalVisible(false);
-                // Optionally, sort your lists here
               }}
             >
               <Text style={{ color: '#fff', fontSize: 16 }}>Recent Activity</Text>
@@ -653,13 +631,13 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: '#4A99E9', // You can keep accent color
+    borderColor: '#4A99E9',
   },
   statusIndicatorContainer: {
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 16, // Container size to center the dot better
+    width: 16,
     height: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -669,7 +647,7 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: '#121212', // Use a darker border for contrast
+    borderColor: '#121212',
   },
   searchBar: {
     flexDirection: 'row',
@@ -705,10 +683,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#232129',
   },
-  channelName: {
-   fontSize: 17,
-   fontWeight: '500'
-},
+  channelName: { fontSize: 17, fontWeight: '500' },
   dmRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -723,10 +698,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 12,
   },
-  dmName: {
-   fontSize: 16,
-   fontWeight: '500'
-},
+  dmName: { fontSize: 16, fontWeight: '500' },
   fab: {
     position: 'absolute',
     right: 24,
@@ -777,10 +749,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     backgroundColor: '#18171C',
   },
-  jumpName: {
-    color: '#fff',
-    fontSize: 16,
-  },
+  jumpName: { color: '#fff', fontSize: 16 },
   modalTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
   input: {
     width: '100%',
@@ -816,15 +785,8 @@ const styles = StyleSheet.create({
     borderColor: '#4A99E9',
     marginBottom: 12,
   },
-  profileName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  profileEmail: {
-    fontSize: 14,
-    marginBottom: 18,
-  },
+  profileName: { fontSize: 20, fontWeight: 'bold', marginBottom: 2 },
+  profileEmail: { fontSize: 14, marginBottom: 18 },
   profileAction: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -834,10 +796,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     width: '100%',
   },
-  profileActionText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
+  profileActionText: { fontSize: 16, fontWeight: '500' },
   menuOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -856,16 +815,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-  },
-  menuText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 18 },
+  menuText: { fontSize: 16, fontWeight: '500' },
   sortModalContent: {
     backgroundColor: '#18171C',
     borderRadius: 14,
